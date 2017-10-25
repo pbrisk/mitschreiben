@@ -6,7 +6,7 @@ __all__ = ['Record']
 
 
 class RecordMeta(type):
-    """A MetaClass to allow Record to be used in more universal way"""
+    """A MetaClass to """
 
     def __call__(cls, *args, **kwargs):
         record = cls.__new__(cls)
@@ -20,6 +20,55 @@ class Record(object):
     This class can be used to record values during calculations. The class can be called to do the actual recording.
     Moreover the class grants access to the record depending on the record level and finally it is a contextmanager to
     control whether to record or not.
+
+    - The call "Record()" yields the Record-Object of the current scope of recording. Within each scope this object is
+    unique.
+    - The call "Record(key=value,key2=value2,...)" or "Record(keyval)" [with keyval={key:value, key2:value2, ...}]
+    records the values with the given keys in the Record-Object. The actual keys will be concatenated keys depending on
+    a stack of prefixes (see below). The Record-Object knows this stack and records {"former|keystack|key" : value}.
+    - By default no value will be recorded unless the recording is started. This is can be done in two ways.
+        1.  Record is a contextmanager. A call looks like this:
+                Record(key=value)       # No recording of key, value
+                with Record() [as rec]:
+                    ...
+                    Record(key=value)   # key, value is recorded
+                Record(key=value)       # No recording of key, value
+            Thereby it is ensured to also stop the recording after the leaving the with environment.
+        2.  The call "Record().start()" enables recording whereas "Record().stop()" stops the recording
+                Record(key=value)       # No recording of key, value
+                Record().start()
+                Record(key=value)       # key, value is recorded
+                Record().stop()
+                Record(key=value)       # No recording of key, value
+
+    - There can be different scopes of recording by using the context management functionality of Record. As soon as the
+    recording context is entered the level of record is incremented by one and a within this scope this Record-Object
+    does not know what might have been recorded in an outer scope. When leaving the inner scope the Record-Object will
+    be integrated in the Record-Object of the outer scope.
+
+    - With "Record().entries" one access the dict containing the recorded keys and values.
+
+    Record makes use of two subclasses: Key and Prefix
+
+    Key is class that provides some convenience to add keys and obtain new keys, which are used as the keys of the
+    of the Record().entries.
+    The keys may contain some information on the call stack when the class Prefix is used. As mentioned above, Record
+    knows a prefix stack two record in which successive function call a value was recorded. A Prefix is added when a
+    function is decorated with @Record.Prefix().
+
+    [IN]    @Record.Prefix()
+            def foo(obj):
+                ...
+                Record(key=value)
+
+
+            with Record() as rec:
+                foo(bar)
+
+                print rec.entries
+
+    [OUT]   {"bar.foo|key":value}
+
     """
 
     __metaclass__ = RecordMeta
@@ -49,7 +98,6 @@ class Record(object):
             return '|'.join(map(str, self))
 
     class _add_prefix_context(object):
-
 
         def __enter__(self):
             return self
