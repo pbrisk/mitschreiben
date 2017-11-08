@@ -80,8 +80,17 @@ class Table(object):
 
         return ret
 
-    def pretty_string(self, leftUpper=None, tabName=None):
-        separator = ' | '
+    def to_csv(self, leftUpper=None, tabName=None, separator=';'):
+        repr = list()
+        col_keys = sorted(self.col_keys)
+        repr.append(""+separator+separator.join(col_keys))
+        for key in self.row_keys:
+            elements = [key]+self.get_row_list(key, col_keys)
+            elements = map(str, elements)
+            repr.append(separator.join(elements))
+        return "\n".join(repr)
+
+    def pretty_string(self, leftUpper=None, tabName=None, separator=" | "):
         representation = []
         name = tabName if tabName is not None else self.name
         if name is not None:
@@ -110,15 +119,23 @@ class Table(object):
     def to_html(self):
         rows = self.to_nested_list()
         s = "<table>\n"
-        for row in rows:
-            s += ' '*2 + '<tr>\n'
-            for cell in row:
-                s += ' '*4 + ('<th>' if row == rows[0] else '<td>')
-                s += str(cell)
-                s += ('</th>' if row == rows[0] else '</td>')
-                s += '\n'
-            s += ' '*2 + '</tr>\n'
-        s += '</table>\n'
+        s += "<tr class='headrow'>\n"
+        s += "<th colspan='{number}'>{tabname}</th>\n".format(number=len(rows[0]), tabname = self.name)
+        s += "</tr>\n"
+        header = rows[0]
+        s += "<tr class='bodyrow'>\n"
+        for cell in header:
+            s += "<th>{}</th>\n".format(cell)
+        s += "</tr>\n"
+
+        for row in rows[1:]:
+            s += "<tr class='bodyrow'>\n"
+            s += "<th>{}</th>\n".format(row[0])
+            for cell in row[1:]:
+                s += "<td>{}</td>\n".format(cell)
+            s +="</tr>"
+
+        s+="</table>"
         return s
 
     def to_nested_list(self):

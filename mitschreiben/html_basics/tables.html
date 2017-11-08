@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<title>NO TITLE</title>
+<head>
+    <style>
+        table{
+            border-collapse:collapse;
+            border-width: 1px;
+            border-color: #ccc;
+            padding: 2 px;
+        }
+        tr.headrow{
+            background-color: #ccc;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        tr.headrow.active{
+            background-color: #bcf;
+        }
+        tr.bodyrow{
+            background-color: #eaeaea;
+        }
+        tr.bodyrow.invisible{
+            visibility: collapse;
+        }
+
+        tr.headrow:hover{
+            background-color: #bcf;
+        }
+        td, th{
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+#SPLIT#
+
+<script>
+    var acc = document.getElementsByClassName("headrow");
+    var i;
+
+    for (i = 0; i < acc.length; i++){
+        acc[i].onclick = function(){
+            this.classList.toggle("active");
+            var selectedTable = this.parentNode;
+            rows = selectedTable.getElementsByClassName("bodyrow")
+            for(i = 0; i < rows.length; i++){
+                rows[i].classList.toggle("invisible")
+            }
+        }
+    }
+
+</script>
+</body>
+</html>

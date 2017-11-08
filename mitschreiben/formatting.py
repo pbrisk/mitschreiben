@@ -1,5 +1,6 @@
 from table import Table
 import os
+import datetime
 
 
 class DictTree(dict):
@@ -21,25 +22,24 @@ class DictTree(dict):
             else:
                 raise KeyError
 
-    def as_table(self, name):
-
-        "Return a table from two uppermost layers of the DictTree"
-
+    def toplevel_tables(self, name):
+        """Return tables from the two uppermost layers of the DictTree. One of them is a true table and the
+        other is a collection of values"""
 
         len1_keys = [key for key in self.keys() if len(key)==1]
         len2_keys = [key for key in self.keys() if len(key)==2]
 
-        pt = Table(name= name,left_upper='Properties')
+        pt = Table(name= name,)
         for k in len1_keys:
             pt.append('', k[0], self[k])
 
-        vt = Table(name=name, left_upper='Values')
+        vt = Table(name=name)
         for k in len2_keys:
             vt.append(k[0], k[1], self[k])
 
         return pt.sort(), vt.sort()
 
-    def make_tables(self):
+    def to_tables(self):
         """Makes a table from each level within the DictTree"""
         max_level = max(map(len, self.keys()))
         tables = list()
@@ -47,39 +47,135 @@ class DictTree(dict):
             for key in sorted(list(set([k[0:i] for k in self.keys()]))):
                 T = self[key]
                 if isinstance(T, DictTree):
-                    a, b = T.as_table(" || ".join(map(str,key)))
+                    a, b = T.toplevel_tables("Table: " + "|".join(map(str, key)))
                     if not a.is_empty() and i == 0:
+                        a.name = "Properties"
                         tables.append(a)
                     if not b.is_empty():
                         tables.append(b)
         return tables
 
-    def html_tables(self, path, filename):
-        """writes all ables to a filename.html in path"""
-        if not os.path.isdir(path):
+    def pretty_print(self):
+        "this function prints an alphabetically sorted tree in a directory-like structure."
+
+        def compare_keys(tpl_prev, tpl_next):
+
+            equal_list = [x==y for x,y in zip(tpl_prev, tpl_next)]
+            j = equal_list.index(False)
+            return j, tpl_next[j:]
+
+        keys = sorted(self.keys())
+        previous_key = None
+        indent = 0
+        indentfactor = 1
+
+        for key in keys:
+            rest_key = key
+            if previous_key:
+                indent, rest_key = compare_keys(previous_key, key)
+
+            for i, value in enumerate(rest_key):
+                print ("|"+" "*indentfactor)*(indent+i)+value \
+                      + ((":" +" " * indentfactor + str(self[key]))if i == len(rest_key) - 1 else "")
+            previous_key = key
+
+    def as_tree_to_html(self, filename, path=None):
+        """This function creates a html file that presents the dicttree in its tree structure."""
+
+        if path and not os.path.isdir(path):
             os.makedirs(path)
 
-        s = """<!DOCTYPE html>\n<html>\n<head>\n<title>%s</title>\n<style>
-        th, td {
-            border: 1px solid #888;
-            padding: 5px;
-        }
-        td {
-            text-align: right;
-            white-space: nowrap;
-        }
-        table {
-            padding: 1px;
-        }
-        </style>\n</head>\n<body>
-        """ % filename
+        if path:
+            target_file_path = os.path.join(path, filename)
+        else:
+            target_file_path = filename
 
-        for t in self.make_tables():
-            s += '<h4>{}</h4>'.format(t.name)
-            s += t.to_html()
-            s += '<br>'
+        def make_button(caption):
+            return "<button class='accordion'>{}</button>".format(caption)
 
-        s += "</body>\n</html>"
+        def compare_keys(tpl_prev, tpl_next):
+            equal_list = [x==y for x,y in zip(tpl_prev, tpl_next)]
+            j = equal_list.index(False)
+            return j, tpl_next[j:]
 
-        with open(path+'\\%s.html' % filename, 'w') as f:
-            f.write(s)
+        keys = sorted(self.keys())
+        previous_key = None
+
+        with open("htmldicttree.temp", "w") as tempfile:
+
+            for key in keys:
+                rest_key = key
+                if previous_key:
+                    indent, rest_key = compare_keys(previous_key, key)
+                    previous_indent = len(previous_key)-1
+                    if indent < previous_indent:
+                        tempfile.write("\n</div>" * abs(previous_indent - indent))
+                for i, value in enumerate(rest_key):
+                    if i == len(rest_key)-1:
+                        tempfile.write("\n<div class='panel-elem'>" + value +" : " + str(self[key]) + "</div>")
+                    else:
+                        tempfile.write("\n"+make_button(value))
+                        tempfile.write("\n<div class='panel'>")
+                previous_key = key
+
+        template = open('html_basics/accordion.html')
+        s1,s2 = template.read().split("#SPLIT#")
+        with open('htmldicttree.temp') as temp:
+            with open(target_file_path, 'w') as target_file:
+                target_file.write(s1)
+                for line in temp.readlines():
+                    target_file.write(line)
+                target_file.write(s2)
+
+        os.remove('htmldicttree.temp')
+
+    def as_tables_to_html(self, filename, path=None):
+        """This functions creates a html file presenting the tree in tables"""
+
+        if path and not os.path.isdir(path):
+            os.makedirs(path)
+
+        if path:
+            target_file_path = os.path.join(path, filename)
+        else:
+            target_file_path = filename
+
+        tbs = self.to_tables()
+        abs_path = os.path.join(os.path.split(__file__)[0],'html_basics','tables.html')
+
+        f = open(abs_path)
+        s1, s2 = f.read().split("#SPLIT#")
+        f.close()
+
+        with open(target_file_path, "w") as f:
+
+            f.write(s1)
+
+            for tb in sorted(tbs, key=lambda x: x.name):
+                f.write("<table>\n")
+                f.write("<tr><td>{}</td></tr>\n".format(tb.to_html()))
+                f.write("</table>\n")
+            f.write(s2)
+
+    def to_csv_files(self, path):
+        "this function creates csv files for every table that can be made from the tree"
+
+        def make_filename(tabname):
+            timestamp = datetime.datetime.now().strftime("%Y%m%d")
+            if len(tabname)>200:
+                tabname = tabname[:100]+"___"+reversed(reversed(tabname)[:100])
+
+            return timestamp + "_" +tabname + ".csv"
+
+        if path and not os.path.isdir(path):
+            os.makedirs(path)
+
+        for tb in self.to_tables():
+            filename = make_filename(tb.name)
+            if path:
+                target_file_path = os.path.join(path, filename)
+            else:
+                target_file_path = filename
+
+            with open(target_file_path, "w") as f:
+                f.write(tb.to_csv())

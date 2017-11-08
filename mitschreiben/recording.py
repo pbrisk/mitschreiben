@@ -1,5 +1,6 @@
 from inspect import getargspec
 from functools import wraps
+from formatting import DictTree
 
 
 __all__ = ['Record']
@@ -195,6 +196,18 @@ class Record(object):
     def entries(self):
         """returns a dictionary with Recordkeys and Values"""
         return self._entries
+
+    def _to_dict_tree(self):
+        """returns a DictTree made from the record.entries"""
+        return DictTree(self.entries)
+
+    def to_csv_files(self, path):
+        """creates csv files for the different levels of the record in the given path."""
+        self._to_dict_tree().to_csv_files(path)
+
+    def to_html_tables(self, filename, path=None):
+        """creates a html file with tables of the different levels of the record in the given path."""
+        self._to_dict_tree().as_tables_to_html(filename, path)
 
     def clear(self):
         """this method clears the entries of a Record instance. Since there is only one toplevel Record instance everything
