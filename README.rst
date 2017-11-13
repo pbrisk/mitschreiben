@@ -11,17 +11,17 @@ mitschreiben
 
 mitschreiben (german for 'to take notes') helps recording values during
 calculations for later evaluation, e.g. check if the right objects or
-values were used.
+values were used or to present the results in structure of tables
 
-It provides a class called Record which is a contextmanager and the also
-the Function to call for recording.
+It provides a class called Record which is basically used for everything. It grants access to record object, it is used
+for the recording and it is a context manager used to trigger whether to record or not.
 
 Example Usage
 -------------
 
-In the first step one places ``Record`` at the places where one wants to
+In the first ``Record(key = value)`` or ``Record(dictionary)`` is placed where one wants to
 record a value. The decorator ``Prefix`` provided by this class is used
-to define a key under which the recorded value will be stored in the
+to define a key extension under which the recorded value will be stored in the
 ``Record``. The Prefixes get stacked, so when there is a successive
 function call to another function which is prefixed those Prefixes are
 concatenated.
@@ -29,6 +29,9 @@ concatenated.
 .. code:: python
 
     from mitschreiben import Record
+
+    def magical_stuff_happens(baz, barz):
+        return "That's", "great"
 
     class Foo():
 
@@ -52,8 +55,14 @@ concatenated.
         def __repr__(self):
             return "Foo({})".format(id(self))
 
+::
+
 Now, since ``Record`` is a contextmanager, the recording will only
-happen in such a context.
+happen in such a context. The ``with``-statement activates the recording and returns the current scopes record object
+for convenient access. Another thing is, that record level is increased by this statement, leading to record objects
+that are only available in that scope. When leaving the ``with`` the outer scopes's record will be extend by the inner
+one, by prepending the outer records current prefix stack to each key of the inner one.
+
 
 .. code:: python
 
@@ -64,17 +73,38 @@ happen in such a context.
 
         print rec.entries
 
-The entries are a dict whose keys are tuples which are the stacked
-Prefixes. So one can see from which object which function was called
-with which object ... and so forth and that led to the recorded value.
-
 ::
+
+The entries are a dict whose keys are tuples which are the stacked Prefixes. In this way it is possible to determine which method on which object was called, what then led
+to successive calls, where in the end a value is recorded. The example above has the following output.
+
+.. code:: python
 
     {('Foo(42403656).do_something', 'again_a_key'): 'baz', ('Foo(42403656).bar', 'Foo(42403656).do_something', 'again_a_key'): 'baz', ('Foo(42403656).do_something', 'so_creative'): 'barz', ('Foo(42403656).bar', 'a_key'): "That's", ('Foo(42403656).bar', 'another_key'): 'great', ('Foo(42403656).bar', 'Foo(42403656).do_something', 'so_creative'): 'barz'}
 
-Now this dictionary can be made into *tree of dictionaries*, a
-``DictTree``, and from there to tables that are nice for investigation
-on the recorded data.
+::
+
+Formatting the output
+---------------------
+
+The Record can be represented in different formats. The base to this is a *tree of dictionaries*,
+implemented by the class ``DictTree`` in ``mitschreiben.formatting``. For the two base outputs however, one
+does not need to actually instantiate a ``DictTree`` yourself. The respective methods are
+
+.. code::python
+    Record().to_csv_files(PATH)
+    Record().to_html_tables(FILENAME, PATH)
+::
+
+Both of these methods produce tables of the output. The idea is that, that certain calculations are made with different
+objects, leading to the same keywords. So one obtains a table with row keys (object names) and column keys (the keywords
+used to record a value). As the name of the former methods suggests, it produces this tables and writes them as single
+.csv files into ``Path``, whereas the latter construct a html document in which one can navigate through the tree structure
+and see the tables at those positions where they would be placed in the tree.
+
+
+
+Another way would be to work with the ``DictTree`` directly.
 
 .. code:: python
 
@@ -109,122 +139,128 @@ look at the record. It will look similiar to the following tables
 
 .. raw:: html
 
-   <!DOCTYPE html>
+   <head>
+    <style>
 
-.. raw:: html
+        button.accordion{
+            background-color: #eee;
+            color: #000;
+            cursor: pointer;
+            padding: 4px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+        }
+        button.accordion.active{
+            background-color: #bcf;
+        }
+        button.accordion:hover{
+            background-color: #bcf;
+        }
+        button.accordion:after {
+            content: '\002B';
+            font-size: 13px;
+            font-family: sans-serif;
+            color: #777;
+            float: left;
+            min-width: 15px;
+            }
+        button.accordion.active:after{
+            content: '\2212';
+        }
+        div.panel{
+            padding: 2px;
+            padding-left: 2%;
+            padding-right: 0px;
+            display: none;
+        }
+        div.panel-elem{
+            font-size: 13px;
+            font-family: sans-serif;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        table{
+            border-collapse:collapse;
+            border-width: 1px;
+            border-color: #ccc;
+            padding: 2 px;
+        }
+        tr.headrow{
+            visibility:collapse;
+        }
+        tr.bodyrow{
+            background-color: #eee;
+        }
+        td, th{
+            padding: 5px;
+        }
+    </style>
+    </head>
+    <body>
 
-   <html>
 
-.. raw:: html
 
-   <body>
-
-::
-
-        <h4></h4><table style="padding: 1em">
-
-.. raw:: html
-
-   <tr>
-
-::
-
+    <div class='panel-elem'><table>
+    <tr class='headrow'>
+    <th colspan='5'>table</th>
+    </tr>
+    <tr class='bodyrow'>
     <th> </th>
     <th>a_key</th>
     <th>again_a_key</th>
     <th>another_key</th>
     <th>so_creative</th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <td>Foo(42403656).bar</td>
+    </tr>
+    <tr class='bodyrow'>
+    <th>Foo(Rom).bar</th>
     <td>That's</td>
     <td>None</td>
     <td>great</td>
     <td>None</td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <td>Foo(42403656).do_something</td>
+    </tr><tr class='bodyrow'>
+    <th>Foo(Rom).do_something</th>
     <td>None</td>
     <td>baz</td>
     <td>None</td>
     <td>barz</td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   </table>
-
-.. raw:: html
-
-   <h4>
-
-Foo(42403656).bar
-
-.. raw:: html
-
-   </h4>
-
-.. raw:: html
-
-   <table>
-
-.. raw:: html
-
-   <tr>
-
-::
-
+    </tr></table></div>
+    <button class='accordion'>Foo(Rom).bar</button>
+    <div class='panel'>
+    <div class='panel-elem'><table>
+    <tr class='headrow'>
+    <th colspan='2'>table</th>
+    </tr>
+    <tr class='bodyrow'>
     <th> </th>
+    <th>Foo(Rom).do_something</th>
+    </tr>
+    <tr class='bodyrow'>
     <th>again_a_key</th>
-    <th>so_creative</th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <td>Foo(42403656).do_something</td>
     <td>baz</td>
+    </tr><tr class='bodyrow'>
+    <th>so_creative</th>
     <td>barz</td>
+    </tr></table></div>
 
-.. raw:: html
+    <script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
 
-   </tr>
+        for (i = 0; i < acc.length; i++){
+            acc[i].onclick = function(){
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                }
+                else {
+                    panel.style.display = "block";
+                }
+            }
+        }
+    </script>
 
-.. raw:: html
-
-   </table>
-
-.. raw:: html
-
-   </body>
-
-.. raw:: html
-
-   </html>
+    </body>
