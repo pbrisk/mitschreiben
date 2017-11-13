@@ -92,50 +92,16 @@ implemented by the class ``DictTree`` in ``mitschreiben.formatting``. For the tw
 does not need to actually instantiate a ``DictTree`` yourself. The respective methods are
 
 .. code::python
+
     Record().to_csv_files(PATH)
     Record().to_html_tables(FILENAME, PATH)
-::
+
 
 Both of these methods produce tables of the output. The idea is that, that certain calculations are made with different
 objects, leading to the same keywords. So one obtains a table with row keys (object names) and column keys (the keywords
 used to record a value). As the name of the former methods suggests, it produces this tables and writes them as single
 .csv files into ``Path``, whereas the latter construct a html document in which one can navigate through the tree structure
-and see the tables at those positions where they would be placed in the tree.
-
-
-
-Another way would be to work with the ``DictTree`` directly.
-
-.. code:: python
-
-    from mitschreiben.formatting import DictTree
-
-    DT = DictTree(rec.entries)
-
-    tables = DT.make_tables()
-    for t in tables:
-        print t.pretty_string()
-        print
-
-This results in the following output. The first table represents the top
-level of the record, whereas the other tabels are named by
-*object.function*.
-
-::
-
-                        Values |  a_key | again_a_key | another_key | so_creative
-             Foo(42403656).bar | That's |        None |       great |        None
-    Foo(42403656).do_something |   None |         baz |        None |        barz
-
-    Foo(42403656).bar
-                        Values | again_a_key | so_creative
-    Foo(42403656).do_something |         baz |        barz
-
-The call ``DT.html_tables('FOLDER')`` creates *FOLDER* on the Desktop -
-if it isn't already there - and places an *index.html* file into it.
-With large tables this leads to nicer results if one wants to have a
-look at the record. It will look similiar to the following tables
-(depending on the css style)
+and see the tables at those positions where they would be placed in the tree. Those tables would look similar to
 
 .. raw:: html
 
@@ -181,22 +147,31 @@ look at the record. It will look similiar to the following tables
     <td>barz</td>
     </tr></table></div>
 
-    <script>
-        var acc = document.getElementsByClassName("accordion");
-        var i;
+Another way would be to work with the ``DictTree`` directly.
 
-        for (i = 0; i < acc.length; i++){
-            acc[i].onclick = function(){
-                this.classList.toggle("active");
-                var panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                }
-                else {
-                    panel.style.display = "block";
-                }
-            }
-        }
-    </script>
+.. code:: python
 
-    </body>
+    from mitschreiben.formatting import DictTree
+
+    DT = DictTree(rec.entries)
+
+    tables = DT.make_tables()
+    for t in tables:
+        print t.pretty_string()
+        print
+
+This results in the following output. The first table represents the top
+level of the record, whereas the other tabels are named by
+*object.function*.
+
+.. code::
+
+                        Values |  a_key | again_a_key | another_key | so_creative
+             Foo(42403656).bar | That's |        None |       great |        None
+    Foo(42403656).do_something |   None |         baz |        None |        barz
+
+    Foo(42403656).bar
+                        Values | again_a_key | so_creative
+    Foo(42403656).do_something |         baz |        barz
+
+
