@@ -55,7 +55,6 @@ concatenated.
         def __repr__(self):
             return "Foo({})".format(id(self))
 
-::
 
 Now, since ``Record`` is a contextmanager, the recording will only
 happen in such a context. The ``with``-statement activates the recording and returns the current scopes record object
@@ -117,19 +116,18 @@ and see the tables at those positions where they would be placed in the tree. Th
     <th>so_creative</th>
     </tr>
     <tr class='bodyrow'>
-    <th>Foo(Rom).bar</th>
+    <th>Foo(42403656).bar</th>
     <td>That's</td>
     <td>None</td>
     <td>great</td>
     <td>None</td>
     </tr><tr class='bodyrow'>
-    <th>Foo(Rom).do_something</th>
+    <th>Foo(42403656).do_something</th>
     <td>None</td>
     <td>baz</td>
     <td>None</td>
     <td>barz</td>
     </tr></table></div>
-    <button class='accordion'>Foo(Rom).bar</button>
     <div class='panel'>
     <div class='panel-elem'><table>
     <tr class='headrow'>
@@ -137,7 +135,7 @@ and see the tables at those positions where they would be placed in the tree. Th
     </tr>
     <tr class='bodyrow'>
     <th> </th>
-    <th>Foo(Rom).do_something</th>
+    <th>Foo(42403656).do_something</th>
     </tr>
     <tr class='bodyrow'>
     <th>again_a_key</th>
