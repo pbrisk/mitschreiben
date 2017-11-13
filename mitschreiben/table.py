@@ -25,6 +25,14 @@ class Table(object):
     def is_empty(self):
         return len(self.row_keys) == 0 or len(self.col_keys) == 0
 
+    def transpose(self):
+        ret = Table(name=self.name, left_upper=self.left_upper, default_value=self._default_value)
+        for row_key in self.row_keys:
+            for col_key in self.col_keys:
+                ret.append(col_key, row_key, self.get(row_key, col_key))
+        return ret
+
+
     def append(self, row_key, col_key, value):
         col_dict = self._values.get(row_key, None)
         if col_dict is None:
@@ -77,7 +85,6 @@ class Table(object):
         for row_key in sortrow_keys:
             for col_key in sortcol_keys:
                 ret.append(row_key, col_key, self.get(row_key, col_key))
-
         return ret
 
     def to_csv(self, leftUpper=None, tabName=None, separator=';'):

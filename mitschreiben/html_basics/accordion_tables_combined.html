@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+        button.accordion{
+            background-color: #eee;
+            color: #000;
+            cursor: pointer;
+            padding: 4px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+        }
+        button.accordion.active{
+            background-color: #ccc;
+        }
+        button.accordion:hover{
+            background-color: #bcf;
+        }
+        button.accordion:after {
+            content: '\002B';
+            font-size: 13px;
+            font-family: sans-serif;
+            color: #777;
+            float: left;
+            min-width: 15px;
+            }
+        button.accordion.active:after{
+            content: '\2212';
+        }
+        div.panel{
+            padding: 2px;
+            padding-left: 2%;
+            padding-right: 0px;
+            display: none;
+        }
+        div.panel-elem{
+            font-size: 13px;
+            font-family: sans-serif;
+            padding: 2px
+        }
+        table{
+            border-collapse:collapse;
+            border-width: 1px;
+            border-color: #ccc;
+            padding: 2 px;
+        }
+        tr.headrow{
+            visibility:collapse;
+        }
+        tr.bodyrow{
+            background-color: #eaeaea;
+        }
+        td, th{
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+
+#SPLIT#
+
+<script>
+    var acc = document.getElementsByClassName("accordion");
+    var i;
+
+    for (i = 0; i < acc.length; i++){
+        acc[i].onclick = function(){
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            }
+            else {
+                panel.style.display = "block";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
