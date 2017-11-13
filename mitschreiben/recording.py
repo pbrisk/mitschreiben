@@ -206,8 +206,9 @@ class Record(object):
         self._to_dict_tree().to_csv_files(path)
 
     def to_html_tables(self, filename, path=None):
-        """creates a html file with tables of the different levels of the record in the given path."""
-        self._to_dict_tree().as_tables_to_html(filename, path)
+        """creates a html structured like the levels of the graph (directory like) where the last two branch levels are
+        made into a table"""
+        self._to_dict_tree().as_html_tree_table(filename, path)
 
     def clear(self):
         """this method clears the entries of a Record instance. Since there is only one toplevel Record instance everything

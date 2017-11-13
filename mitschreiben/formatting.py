@@ -127,8 +127,11 @@ class DictTree(dict):
                         tempfile.write("\n<div class='panel'>")
                 previous_key = key
 
-        template = open('html_basics/accordion.html')
-        s1,s2 = template.read().split("#SPLIT#")
+        abs_path = os.path.join(os.path.split(__file__)[0], 'html_basics', 'accordion.html')
+        f = open(abs_path)
+        s1, s2 = f.read().split("#SPLIT#")
+        s1 = s1.replace('#TITLE', filename)
+        f.close()
         with open('htmldicttree.temp') as temp:
             with open(target_file_path, 'w') as target_file:
                 target_file.write(s1)
@@ -148,6 +151,7 @@ class DictTree(dict):
 
         f = open(abs_path)
         s1, s2 = f.read().split("#SPLIT#")
+        s1 = s1.replace('#TITLE', filename)
         f.close()
 
         with open(target_file_path, "w") as f:
@@ -156,6 +160,8 @@ class DictTree(dict):
 
             for tb in sorted(tbs.values(), key=lambda x: x.name):
                 f.write("<table>\n")
+                if tb.name == "":
+                    tb.name = "TOP"
                 f.write("<tr><td>{}</td></tr>\n".format(tb.to_html()))
                 f.write("</table>\n")
             f.write(s2)
@@ -178,18 +184,11 @@ class DictTree(dict):
             return j, tpl_next[j:]
 
         keys = sorted(tree.keys(), key=lambda x: x[:-1])
-        print keys
         previous_key = None
 
         with open("htmldicttree.temp", "w") as tempfile:
 
             for key in keys:
-                if key == ():
-                    tempfile.write(tree[key].to_html())
-                    previous_key=key
-                    continue
-
-
                 rest_key = key
                 if previous_key:
                     indent, rest_key = compare_keys(previous_key, key)
@@ -206,11 +205,12 @@ class DictTree(dict):
                         tempfile.write("\n<div class='panel'>")
                 previous_key = key
 
-
         abs_path = os.path.join(os.path.split(__file__)[0], 'html_basics', 'accordion_tables_combined.html')
         f = open(abs_path)
         s1, s2 = f.read().split("#SPLIT#")
+        s1 = s1.replace("#TITLE", filename)
         f.close()
+
         with open('htmldicttree.temp') as temp:
             with open(target_file_path, 'w') as target_file:
                 target_file.write(s1)
